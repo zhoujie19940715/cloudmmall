@@ -1,0 +1,32 @@
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      label: master
+      server:
+        git:
+          uri: https://github.com/zhoujie19940715/config-repo
+          search-paths: spring-cloud-config
+          username: zhoujie19940715
+          password: Jj839291
+          basedir: E:/projects/springCloud_imooc/cloudmall/config/basedir
+  rabbitmq:
+    host: 192.168.1.239
+    port: 5672
+    username: guest
+    password: guest
+#management:
+ # endpoints:
+   # web:
+     # expose: "*"
+management:
+  endpoints:
+    web:
+      exposure:
+        include: bus-refresh
+debug: false
