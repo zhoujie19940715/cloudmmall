@@ -1,6 +1,7 @@
 package com.zj.product.controller;
 
-import com.zj.order.pojo.OrderItem;
+import com.zj.product.common.OrderItemInput;
+import com.zj.product.common.ProductOutput;
 import com.zj.product.pojo.Product;
 import com.zj.product.service.IProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +22,12 @@ public class ServerController {
 
 
     @PostMapping("/reduceProductStock")
-    public void reduceProductStock(@RequestBody List<OrderItem> orderItemList){
+    public void reduceProductStock(@RequestBody List<OrderItemInput> orderItemList){
         productService.reduceProductStock(orderItemList);
     }
 
     @GetMapping("/getProductById")
-    public Product getProcutById(@RequestParam("id") Integer id){
+    public ProductOutput getProcutById(@RequestParam("id") Integer id){
 
         return productService.getProductById(id);
     }

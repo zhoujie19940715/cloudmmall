@@ -13,3 +13,6 @@ spring:
         service-id: config-server
       profile: dev
       label: master
+logging:
+  level:
+    org.springframework.cloud.openfeign: debug

@@ -1,3 +1,8 @@
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
 spring:
   application:
     name: order
@@ -8,14 +13,3 @@ spring:
         service-id: config-server
       profile: dev
       label: master
-    stream:
-      bindings:
-        input:
-          group: order
-          content-type: application/josn
-eureka:
-  client:
-    service-url:
-     defaultZone: http://localhost:8761/eureka/
-
-

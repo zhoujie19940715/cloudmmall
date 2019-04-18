@@ -1,8 +1,9 @@
 package com.zj.product.service;
 
 import com.github.pagehelper.PageInfo;
+import com.zj.product.common.OrderItemInput;
+import com.zj.product.common.ProductOutput;
 import com.zj.product.common.ServerResponse;
-import com.zj.order.pojo.OrderItem;
 import com.zj.product.pojo.Product;
 import com.zj.product.vo.ProductDetailVo;
 
@@ -30,11 +31,17 @@ public interface IProductService {
 
     /**
      * 减少库存
+     * 提供给订单服务使用
      * @param orderItemList
      */
-    void reduceProductStock(List<OrderItem> orderItemList);
+    void reduceProductStock(List<OrderItemInput> orderItemList);
 
-    Product getProductById(Integer id);
+    /**
+     * 提供给订单服务使用
+     * @param id
+     * @return
+     */
+    ProductOutput getProductById(Integer id);
 
 
 }

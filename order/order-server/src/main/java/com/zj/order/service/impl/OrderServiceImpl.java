@@ -15,6 +15,7 @@ import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import com.zj.order.message.ProcuctReceiver;
 import com.zj.product.client.ProductClient;
 import com.zj.product.common.OrderItemInput;
 import com.zj.product.common.ProductOutput;
@@ -31,7 +32,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
@@ -43,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service("iOrderService")
 @Transactional(isolation = Isolation.DEFAULT,propagation = Propagation.REQUIRED)
@@ -66,6 +71,12 @@ public class OrderServiceImpl implements IOrderService {
 
     @Autowired
     private ShippingMapper shippingMapper;
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    private AmqpTemplate amqpTemplate;
 
     public ServerResponse pay(Long orderNo, Integer userId, String path) {
         Map<String, String> resultMap = Maps.newHashMap();
@@ -240,17 +251,19 @@ public class OrderServiceImpl implements IOrderService {
      * @param shippingId
      * @return
      */
+    @Transactional(isolation = Isolation.DEFAULT,propagation = Propagation.REQUIRED)
     public ServerResponse createOrder(Integer userId, Integer shippingId) {
         Order order = null;
         List<OrderItem> orderItemList = null;
-        // ①todo 获取用户的所有购物车(调用购物车服务)
+        // ①todo 获取用户的所有已经勾选到的购物车(调用购物车服务)
         List<Cart> cartList = cartMapper.selectCheckedCartByUserId(userId);
-        //②todo 生成购物车中所有订单详情的数据（调用产品服务）   cartItem to oderItem
+        //②todo 生成购物车中所有订单详情的数据（其中会调用商品服务（改为异步））   cartItem to oderItem
         ServerResponse listServerResponse = this.getCartOrderItem(userId, cartList);
         if (!listServerResponse.isSuccess()) {//如果产品的状态和数量出现问题
             return listServerResponse;
         }
         orderItemList = (List<OrderItem>) listServerResponse.getData();
+
         //计算总金额
         BigDecimal payment = this.gerOrderTotalPrice(orderItemList);
         //③生成订单
@@ -265,24 +278,15 @@ public class OrderServiceImpl implements IOrderService {
         orderItemMapper.batchInsert(orderItemList);
         //生成成功，我们要减少我们的库存
       //  this.reduceProductStock(orderItemList);
-        //④todo 减少库存(调用商品服务)
-        List<OrderItemInput> orderItemInputs =  Lists.newArrayList();
-        for ( OrderItem orderItem: orderItemList) {
+        List<OrderItemInput> orderItemInputs = orderItemList.stream().map(e ->{
             OrderItemInput orderItemInput = new OrderItemInput();
-            orderItemInput.setId(orderItem.getId());
-            orderItemInput.setUserId(orderItem.getUserId());
-            orderItemInput.setOrderNo(orderItem.getOrderNo());
-            orderItemInput.setProductId(orderItem.getProductId());
-            orderItemInput.setProductName(orderItem.getProductName());
-            orderItemInput.setProductImage(orderItem.getProductImage());
-            orderItemInput.setCurrentUnitPrice(orderItem.getCurrentUnitPrice());
-            orderItemInput.setQuantity(orderItem.getQuantity());
-            orderItemInput.setTotalPrice(orderItem.getTotalPrice());
-            orderItemInput.setCreateTime(orderItem.getCreateTime());
-            orderItemInput.setUpdateTime(orderItem.getUpdateTime());
-            orderItemInputs.add(orderItemInput);
-        }
-        productClient.reduceProductStock(orderItemInputs);
+            BeanUtils.copyProperties(e,orderItemInput);
+            return orderItemInput;
+        }).collect(Collectors.toList());
+        //同步调用
+        //productClient.reduceProductStock(orderItemInputs);
+        //④todo 减少库存,像商品服务发送消息(调用商品服务（可以改为异步）)
+        amqpTemplate.convertAndSend("orderItemInputs",JsonUtil.obj2String(orderItemInputs));
         //⑤todo 清空购物车(调用购物车服务)
         this.clearCart(cartList);
         //返回前端数据
@@ -360,13 +364,13 @@ public class OrderServiceImpl implements IOrderService {
         }
     }
     //减少库存
-    private void reduceProductStock(List<OrderItem> orderItemList) {
+   // private void reduceProductStock(List<OrderItem> orderItemList) {
         /*for (OrderItem orderItem : orderItemList) {
             Product product = productMapper.selectByPrimaryKey(orderItem.getProductId());
             product.setStock(product.getStock() - orderItem.getQuantity());
             productMapper.updateByPrimaryKeySelective(product);
         }*/
-    }
+  //  }
 
 
     /**
@@ -493,16 +497,32 @@ public class OrderServiceImpl implements IOrderService {
         for (Cart cartItem : cartList) {
             OrderItem orderItem = new OrderItem();
            //Product product = productMapper.selectByPrimaryKey(cartItem.getProductId());
-            //todo 调用商品服务
-            ProductOutput product = productClient.getProcutById(cartItem.getProductId());
-            //校验状态
-            if (Const.ProductStatusEnum.ON_SALE.getCode() != product.getStatus()) {
-                return ServerResponse.createByErrorMessage("产品" + product.getName() + "不是在线售卖状态");
+
+            //从redis中获取商品的状态和库存数量
+            Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(String.format(ProcuctReceiver.PRODUCT_TEMPLATE,cartItem.getProductId()));
+
+            log.info("objects:{}", map);
+            ProductOutput product = null;
+            if(map ==null){
+                //todo 调用商品服务根据获取商品的信息 --这里可以从redis中获取，不需要再调用商品服务
+                 product = productClient.getProcutById(cartItem.getProductId());
+                //校验状态
+                if (Const.ProductStatusEnum.ON_SALE.getCode() != product.getStatus()) {
+                    return ServerResponse.createByErrorMessage("产品" + product.getName() + "不是在线售卖状态");
+                }
+                //校验库存
+                if (cartItem.getQuantity() > product.getStock()) {
+                    return ServerResponse.createByErrorMessage("产品" + product.getName() + "库存不足");
+                }
+            }else {
+                if (Const.ProductStatusEnum.ON_SALE.getCode() != (Integer) (map.get("status"))) {
+                    return ServerResponse.createByErrorMessage("产品" + map.get("name").toString() + "不是在线售卖状态");
+                }
+                if (cartItem.getQuantity() > (Integer) (map.get("stock"))) {
+                    return ServerResponse.createByErrorMessage("产品" + map.get("name").toString() + "库存不足");
+                }
             }
-            //校验库存
-            if (cartItem.getQuantity() > product.getStock()) {
-                return ServerResponse.createByErrorMessage("产品" + product.getName() + "库存不足");
-            }
+
             orderItem.setUserId(userId);
             orderItem.setProductId(product.getId());
             orderItem.setProductName(product.getName());

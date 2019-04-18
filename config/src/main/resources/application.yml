@@ -15,18 +15,18 @@ spring:
           username: zhoujie19940715
           password: Jj839291
           basedir: E:/projects/springCloud_imooc/cloudmall/config/basedir
-  rabbitmq:
-    host: 192.168.1.239
-    port: 5672
-    username: guest
-    password: guest
+  #需要用到springCloudBus
+#  rabbitmq:
+#    host: 192.168.4.94
+#    port: 5672
+#    username: guest
+#    password: guest
+##将接口暴露出来
 #management:
- # endpoints:
-   # web:
-     # expose: "*"
-management:
-  endpoints:
-    web:
-      exposure:
-        include: bus-refresh
-debug: false
+#  endpoints:
+#    web:
+#      exposure:
+#        include: bus-refresh
+#debug: false
+
+
