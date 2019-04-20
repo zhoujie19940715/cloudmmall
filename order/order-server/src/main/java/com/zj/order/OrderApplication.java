@@ -13,11 +13,11 @@ import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-//@EnableCircuitBreaker
+@EnableCircuitBreaker
 //@SpringCloudApplication
 @EnableFeignClients(basePackages = "com.zj.product.client")
 @MapperScan("com.zj.order.dao")
-@ComponentScan(basePackages = "com.zj")
+@ComponentScan(basePackages = "com.zj")//扫描到product-client.jar中的服务降级的类
 //@EnableHystrixDashboard
 public class OrderApplication {
 

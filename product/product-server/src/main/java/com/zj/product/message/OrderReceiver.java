@@ -22,13 +22,13 @@ public class OrderReceiver {
     @Autowired
     private IProductService productService;
 
-    @RabbitListener(queuesToDeclare = @Queue("orderItemInputs"))
-    public void process(String message){
-        List<OrderItemInput> orderItemInputs = JsonUtil.string2Obj(message,
-                new TypeReference<List<OrderItemInput>>() {});
-        log.info("从队列【{}】中，接受到消息{}","orderItemInputs",orderItemInputs);
-        //减库存
-        productService.reduceProductStock(orderItemInputs);
-
-    }
+//    @RabbitListener(queuesToDeclare = @Queue("orderItemInputs"))
+//    public void process(String message){
+//        List<OrderItemInput> orderItemInputs = JsonUtil.string2Obj(message,
+//                new TypeReference<List<OrderItemInput>>() {});
+//        log.info("从队列【{}】中，接受到消息{}","orderItemInputs",orderItemInputs);
+//        //减库存
+//        productService.reduceProductStock(orderItemInputs);
+//
+//    }
 }

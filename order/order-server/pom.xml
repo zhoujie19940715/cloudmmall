@@ -53,6 +53,7 @@
             <artifactId>spring-cloud-netflix-hystrix-dashboard</artifactId>
             <version>2.1.1.RELEASE</version>
         </dependency>
+        <!--使用spring-cloud-sleuth进行服务追踪-->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-sleuth</artifactId>

@@ -23,6 +23,7 @@ public interface ProductClient {
     ProductOutput getProcutById(@RequestParam("id") Integer id);
 
     //接口出现问题就会访问一下触发以下相应服务降级方法
+    // 重写的这些方法=testTemplate中在被调用方法上面使用@HystrixCommand指定fallback方法
     @Component
     static class ProductClientFallback implements ProductClient{
 

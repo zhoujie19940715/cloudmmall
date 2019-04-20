@@ -13,3 +13,32 @@ spring:
         service-id: config-server
       profile: dev
       label: master
+  zipkin:
+    base-url: http://192.168.5.45:9411
+  #sletu.sampler.percentage将请求暴露到系统外部
+  sleuth:
+    sampler:
+      percentage: 1
+#断路器超时时间配置
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 2000
+    #搞特殊化，单独为某个接口设置超时时间
+    getProcut:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 3000
+#使用feign-hystrix首先要启动启动它
+feign:
+  hystrix:
+    enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.openfeign: debug
+

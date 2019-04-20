@@ -236,7 +236,7 @@ public class ProductServiceImpl implements IProductService {
             return productOutput;
         }).collect(Collectors.toList());
         //todo 将更新后的商品对象作为消息对象发送到消息服务器，供商品服务消费
-        amqpTemplate.convertAndSend(JsonUtil.obj2String(productOutputs));
+      //  amqpTemplate.convertAndSend(JsonUtil.obj2String(productOutputs));
     }
 
     @Transactional(isolation = Isolation.DEFAULT, propagation = Propagation.REQUIRED)

@@ -1,0 +1,14 @@
+eureka:
+  client:
+    registerWithEureka: false #在默认设置下，该服务注册中心也会将自己作为客户端来尝试注册它自己
+   # fetchRegistry: false   #所以我们需要禁用它的客户端注册行为
+    serviceUrl:
+      defaultZone: http://eureka2:8762/eureka/
+  server:
+    enable-self-preservation: false
+spring:
+  application:
+    name: eureka
+
+server:
+  port: 8761

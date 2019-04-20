@@ -283,11 +283,11 @@ public class OrderServiceImpl implements IOrderService {
             BeanUtils.copyProperties(e,orderItemInput);
             return orderItemInput;
         }).collect(Collectors.toList());
-        //同步调用
-        //productClient.reduceProductStock(orderItemInputs);
-        //④todo 减少库存,像商品服务发送消息(调用商品服务（可以改为异步）)
-        amqpTemplate.convertAndSend("orderItemInputs",JsonUtil.obj2String(orderItemInputs));
-        //⑤todo 清空购物车(调用购物车服务)
+        //todo 调用商品服务减少库存
+        productClient.reduceProductStock(orderItemInputs);
+        //④ 减少库存,像商品服务发送消息(调用商品服务（可以改为异步）)
+       // amqpTemplate.convertAndSend("orderItemInputs",JsonUtil.obj2String(orderItemInputs));
+        //⑤ 清空购物车(调用购物车服务)
         this.clearCart(cartList);
         //返回前端数据
         OrderVo orderVo = assembleOrderVo(order, orderItemList);
@@ -499,30 +499,39 @@ public class OrderServiceImpl implements IOrderService {
            //Product product = productMapper.selectByPrimaryKey(cartItem.getProductId());
 
             //从redis中获取商品的状态和库存数量
-            Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(String.format(ProcuctReceiver.PRODUCT_TEMPLATE,cartItem.getProductId()));
-
-            log.info("objects:{}", map);
-            ProductOutput product = null;
-            if(map ==null){
-                //todo 调用商品服务根据获取商品的信息 --这里可以从redis中获取，不需要再调用商品服务
-                 product = productClient.getProcutById(cartItem.getProductId());
-                //校验状态
-                if (Const.ProductStatusEnum.ON_SALE.getCode() != product.getStatus()) {
-                    return ServerResponse.createByErrorMessage("产品" + product.getName() + "不是在线售卖状态");
-                }
-                //校验库存
-                if (cartItem.getQuantity() > product.getStock()) {
-                    return ServerResponse.createByErrorMessage("产品" + product.getName() + "库存不足");
-                }
-            }else {
-                if (Const.ProductStatusEnum.ON_SALE.getCode() != (Integer) (map.get("status"))) {
-                    return ServerResponse.createByErrorMessage("产品" + map.get("name").toString() + "不是在线售卖状态");
-                }
-                if (cartItem.getQuantity() > (Integer) (map.get("stock"))) {
-                    return ServerResponse.createByErrorMessage("产品" + map.get("name").toString() + "库存不足");
-                }
+//            Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(String.format(ProcuctReceiver.PRODUCT_TEMPLATE,cartItem.getProductId()));
+//
+//            log.info("objects:{}", map);
+//            ProductOutput product = null;
+//            if(map ==null){
+//                //todo 调用商品服务根据获取商品的信息 --这里可以从redis中获取，不需要再调用商品服务
+//                 product = productClient.getProcutById(cartItem.getProductId());
+//                //校验状态
+//                if (Const.ProductStatusEnum.ON_SALE.getCode() != product.getStatus()) {
+//                    return ServerResponse.createByErrorMessage("产品" + product.getName() + "不是在线售卖状态");
+//                }
+//                //校验库存
+//                if (cartItem.getQuantity() > product.getStock()) {
+//                    return ServerResponse.createByErrorMessage("产品" + product.getName() + "库存不足");
+//                }
+//            }else {
+//                if (Const.ProductStatusEnum.ON_SALE.getCode() != (Integer) (map.get("status"))) {
+//                    return ServerResponse.createByErrorMessage("产品" + map.get("name").toString() + "不是在线售卖状态");
+//                }
+//                if (cartItem.getQuantity() > (Integer) (map.get("stock"))) {
+//                    return ServerResponse.createByErrorMessage("产品" + map.get("name").toString() + "库存不足");
+//                }
+//            }
+            //todo 调用商品服务根据获取商品的信息 --这里可以从redis中获取，不需要再调用商品服务
+            ProductOutput product = productClient.getProcutById(cartItem.getProductId());
+            //校验状态
+            if (Const.ProductStatusEnum.ON_SALE.getCode() != product.getStatus()) {
+                return ServerResponse.createByErrorMessage("产品" + product.getName() + "不是在线售卖状态");
             }
-
+            //校验库存
+            if (cartItem.getQuantity() > product.getStock()) {
+                return ServerResponse.createByErrorMessage("产品" + product.getName() + "库存不足");
+            }
             orderItem.setUserId(userId);
             orderItem.setProductId(product.getId());
             orderItem.setProductName(product.getName());
