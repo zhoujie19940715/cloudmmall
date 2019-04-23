@@ -1,0 +1,46 @@
+eureka:
+  client:
+    service-url:
+     defaultZone: http://localhost:8761/eureka/
+
+debug: true
+
+spring:
+  application:
+    name: user
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    initialSize: 5
+    maxActive: 5
+    maxWait: 60000
+    minEvictableIdleTimeMillis: 300000
+    minIdle: 5
+    password: root
+    testOnBorrow: false
+    testOnReturn: false
+    testWhileIdle: true
+    timeBetweenEvictionRunsMillis: 6000
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://127.0.0.1:3306/mmall
+    username: root
+    validationQuery: SELECT 1 FROM DUAL
+#  rabbitmq:
+#    host: 192.168.3.211
+#    password: guest
+#    port: 5672
+#    username: guest
+#  redis:
+#    host: 192.168.3.211
+#    port: 6379
+#  cloud:
+#    config:
+#      discovery:
+#        enabled: true
+#        service-id: config-server
+#      profile: dev
+#      label: master
+
+env: dev1
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+

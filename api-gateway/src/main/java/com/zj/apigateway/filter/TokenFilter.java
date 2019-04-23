@@ -44,7 +44,6 @@ public class TokenFilter extends ZuulFilter {
         if(StringUtils.isEmpty(token)){
             currentContext.setSendZuulResponse(false);
             currentContext.setResponseStatusCode(HttpStatus.UNAUTHORIZED.value());
-
         }
         return null;
     }
