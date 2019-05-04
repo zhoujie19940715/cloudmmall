@@ -1,12 +1,9 @@
-package com.zhoujie.mall.controller.common.interceptor;
+package com.zj.user.controller.common.interceptor;
 
 import com.google.common.collect.Maps;
-import com.zhoujie.mall.common.Const;
-import com.zhoujie.mall.common.ServerResponse;
-import com.zhoujie.mall.pojo.User;
-import com.zhoujie.mall.util.CookieUtil;
-import com.zhoujie.mall.util.JsonUtil;
-import com.zhoujie.mall.util.RedisShardedPoolUtil;
+
+import com.zj.user.common.*;
+import com.zj.user.pojo.User;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.method.HandlerMethod;
@@ -27,7 +24,7 @@ import java.util.Map;
 
 
 @Slf4j
-public class AuthorityInterceptor implements HandlerInterceptor{
+public class AuthorityInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -55,7 +52,8 @@ public class AuthorityInterceptor implements HandlerInterceptor{
             requestParamBuffer.append(mapKey).append("=").append(mapValue);
         }
 
-        if(StringUtils.equals(className,"UserManageController") && StringUtils.equals(methodName,"login")){
+       // if(StringUtils.equals(className,"UserManageController") && StringUtils.equals(methodName,"login")){
+        if(StringUtils.equals(methodName,"login")){ //如果是登录请求就放过它
             log.info("权限拦截器拦截到请求,className:{},methodName:{}",className,methodName);
             //如果是拦截到登录请求，不打印参数，因为参数里面有密码，全部会打印到日志中，防止日志泄露
             return true;

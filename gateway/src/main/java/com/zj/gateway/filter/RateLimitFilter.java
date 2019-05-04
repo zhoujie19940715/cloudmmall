@@ -1,9 +1,9 @@
-package com.zj.apigateway.filter;
+package com.zj.gateway.filter;
 
 import com.google.common.util.concurrent.RateLimiter;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.exception.ZuulException;
-import com.zj.apigateway.exception.RateLimitException;
+import com.zj.gateway.exception.RateLimitException;
 import org.springframework.stereotype.Component;
 
 import static org.springframework.cloud.netflix.zuul.filters.support.FilterConstants.PRE_TYPE;

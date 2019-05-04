@@ -1,13 +1,9 @@
-package com.zj.apigateway.filter;
+package com.zj.gateway.filter;
 
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import com.netflix.zuul.exception.ZuulException;
-import com.zj.user.common.Const;
-import com.zj.user.common.CookieUtil;
-import com.zj.user.common.JsonUtil;
-import com.zj.user.common.RedisShardedPoolUtil;
-import com.zj.user.pojo.User;
+
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
 
@@ -64,6 +60,9 @@ public class TokenFilter extends ZuulFilter {
 //                RedisShardedPoolUtil.expire(loginToken, Const.RedisCacheExtime.REDIS_SESSION_EXTIME);
 //            }
 //        }
+         RequestContext currentContext = RequestContext.getCurrentContext();
+        HttpServletRequest request = currentContext.getRequest();
+        request.getRequestURI();
         return null;
     }
 }

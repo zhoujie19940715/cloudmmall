@@ -36,24 +36,19 @@ public class UserController {
     public ServerResponse<User> login(String username, String password, HttpServletRequest request,
                                       HttpServletResponse httpServletResponse,
                                       HttpSession session) {
-       //todo 判断是否已经登录
-        String loginToken = CookieUtil.readLoginToken(request);
-        User user = JsonUtil.string2Obj(RedisShardedPoolUtil.get(loginToken), User.class);
-        if(user == null){//用户未登录
-            ServerResponse<User> response = iUserService.login(username, password);
-            if (response.isSuccess()) { //验证成功
-                //说明：面试必考！！！
-                //todo①将在服务端生成的cookie对象响应给浏览器保存
-                CookieUtil.writeLoginToken(httpServletResponse,session.getId());
-                //todo②用seesion的id作为key,user对象序列化的json字符串作为值，过期时间为30分钟，保存到redis数据库
-                RedisShardedPoolUtil.setEx(session.getId(),Const.RedisCacheExtime.REDIS_SESSION_EXTIME,JsonUtil.obj2String(response.getData()));
-            }
-            return response;
-        }else{//用户已经登陆
-            return ServerResponse.createBySuccess();
+        ServerResponse<User> response = iUserService.login(username, password);
+        if (response.isSuccess()) { //验证成功
+            //说明：面试必考！！！
+            //todo①将在服务端生成的cookie对象响应给浏览器保存
+            CookieUtil.writeLoginToken(httpServletResponse, session.getId());
+            //todo②用seesion的id作为key,user对象序列化的json字符串作为值，过期时间为30分钟，保存到redis数据库
+            RedisShardedPoolUtil.setEx(session.getId(), Const.RedisCacheExtime.REDIS_SESSION_EXTIME,
+                    JsonUtil.obj2String(response.getData()));
         }
-
+        return response;
     }
+
+
 
     /**
      *
@@ -104,23 +99,14 @@ public class UserController {
     @RequestMapping(value = "get_user_info.do", method = RequestMethod.POST)
     @ResponseBody
     public ServerResponse<User> getUserInfo(HttpSession session, HttpServletRequest request) {
-       /* User user = (User) session.getAttribute(Const.CURRENT_USER);
-        if (user != null) {
-            return ServerResponse.createBySuccess(user);
-        }*/
 
         String loginToken = CookieUtil.readLoginToken(request);
-        if (StringUtils.isEmpty(loginToken)){
-            return ServerResponse.createByErrorMessage("用户未登录,无法获取当前用户的信息");
-        }
         //从redis中获取user的序列
         String userJson = RedisShardedPoolUtil.get(loginToken);
         //反序列化,生成user对象
         User user = JsonUtil.string2Obj(userJson, User.class);
-        if (user != null) {
-            return ServerResponse.createBySuccess(user);
-        }
-        return ServerResponse.createByErrorMessage("用户未登录,无法获取当前用户的信息");
+        return   ServerResponse.createBySuccess(user);
+
     }
 
     /**
@@ -178,10 +164,8 @@ public class UserController {
         String userJson = RedisShardedPoolUtil.get(loginToken);
         //反序列化,生成user对象
         User user = JsonUtil.string2Obj(userJson, User.class);
-        if (user != null) {
-            return iUserService.resetPassword(passwordOld, passwordNew, user);
-        }
-        return ServerResponse.createByErrorMessage("用户未登录,无法获取当前用户的信息");
+        return iUserService.resetPassword(passwordOld, passwordNew, user);
+
     }
 
     /**

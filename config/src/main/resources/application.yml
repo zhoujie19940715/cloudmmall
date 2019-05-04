@@ -15,6 +15,7 @@ spring:
           username: zhoujie19940715
           password: Jj839291
           basedir: E:/projects/springCloud_imooc/cloudmall/config/basedir
+
   #需要用到springCloudBus
 #  rabbitmq:
 #    host: 192.168.4.94

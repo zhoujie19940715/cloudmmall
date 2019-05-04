@@ -1,4 +1,4 @@
-package com.zj.apigateway.config;
+package com.zj.gateway.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;

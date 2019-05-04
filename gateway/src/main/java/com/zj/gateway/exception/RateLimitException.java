@@ -1,4 +1,4 @@
-package com.zj.apigateway.exception;
+package com.zj.gateway.exception;
 
 public class RateLimitException extends RuntimeException{
 
