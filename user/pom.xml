@@ -128,11 +128,6 @@
             <version>3.1.0</version>
         </dependency>
         <dependency>
-            <groupId>com.alipay</groupId>
-            <artifactId>trade-sdk</artifactId>
-            <version>20161215</version>
-        </dependency>
-        <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
             <version>2.9.0</version>
